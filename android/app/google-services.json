@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "152119704745",
+    "firebase_url": "https://planno-bdf6a-default-rtdb.firebaseio.com",
+    "project_id": "planno-bdf6a",
+    "storage_bucket": "planno-bdf6a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:152119704745:android:7a340ae3d4ebfc07ccbdb8",
+        "android_client_info": {
+          "package_name": "com.example.planno"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "152119704745-uakulqhuk85dk2ggem64u44haam2b2u9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDhkhBlR_Rh_NlC7MD_MOghpULPmqwli3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "152119704745-uakulqhuk85dk2ggem64u44haam2b2u9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

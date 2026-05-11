@@ -5,6 +5,7 @@ import 'package:planno/firebase_options.dart';
 import 'core/routing/app_router.dart';
 import 'features/auth/viewmodels/auth_viewmodel.dart';
 import 'viewmodels/focus_viewmodel.dart';
+import 'viewmodels/profile_viewmodel.dart';
 import 'viewmodels/stats_viewmodel.dart';
 import 'viewmodels/task_viewmodel.dart';
 
@@ -35,12 +36,18 @@ class PlannoApp extends StatelessWidget {
         ChangeNotifierProvider<AuthViewModel>(
           create: (context) => AuthViewModel(),
         ),
+        ChangeNotifierProvider<ProfileViewModel>(
+          create: (context) => ProfileViewModel(),
+        ),
       ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'Planno',
+        // Light-only: remove any possibility of dynamic/dark theming.
+        themeMode: ThemeMode.light,
         theme: ThemeData(
           fontFamily: 'Roboto',
+          useMaterial3: false,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
         routerConfig: router,

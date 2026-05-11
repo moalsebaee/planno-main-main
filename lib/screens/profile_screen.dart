@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/auth/viewmodels/auth_viewmodel.dart';
+import '../features/auth/viewmodels/auth_viewmodel.dart';
+import '../viewmodels/profile_viewmodel.dart';
 import 'task_home_screen.dart';
 import 'stats_screen.dart';
 import 'focus_timer_screen.dart';
@@ -15,14 +17,209 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  bool isDarkMode = false;
-  int selectedThemeIndex = 0;
+  Future<void> _pickImage(
+    ImageSource source,
+    ProfileViewModel viewModel,
+  ) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+    if (pickedFile != null) {
+      await viewModel.updateProfileImage(pickedFile);
+    }
+    if (mounted) Navigator.pop(context);
+  }
 
-  final List<Color> themeColors = [
-    const Color(0xFF475569), // Slate
-    const Color(0xFF0EA5E9), // Blue
-    const Color(0xFFEF4444), // Red
-  ];
+  void _showImageSourceBottomSheet(ProfileViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Select Photo',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3E50),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library,
+                    color: Color(0xFF0085FF),
+                  ),
+                  title: const Text('Gallery'),
+                  onTap: () => _pickImage(ImageSource.gallery, viewModel),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt,
+                    color: Color(0xFF0085FF),
+                  ),
+                  title: const Text('Camera'),
+                  onTap: () => _pickImage(ImageSource.camera, viewModel),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEditProfileBottomSheet(ProfileViewModel viewModel) {
+    final user = viewModel.user;
+    if (user == null) return;
+
+    final nameController = TextEditingController(text: user.name);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom,
+            left: 20,
+            right: 20,
+            top: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(
+                child: Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: GestureDetector(
+                  onTap: () => _showImageSourceBottomSheet(viewModel),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF86EFAC),
+                          shape: BoxShape.circle,
+                          image: user.imageUrl != null
+                              ? DecorationImage(
+                                  image: NetworkImage(user.imageUrl!),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                        ),
+                        child: user.imageUrl == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 50,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0EA5E9),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 3),
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Full Name',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  hintText: 'Enter your name',
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: viewModel.isEditing
+                      ? null
+                      : () async {
+                          final newName = nameController.text.trim();
+                          if (newName.isNotEmpty) {
+                            await viewModel.updateName(newName);
+                          }
+                          if (bottomSheetContext.mounted) {
+                            Navigator.pop(bottomSheetContext);
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF475569),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: viewModel.isEditing
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Save Changes'),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +230,136 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const SizedBox(height: 60),
             // Header Section
-            _buildHeader(),
+            Consumer<ProfileViewModel>(
+              builder: (context, viewModel, child) {
+                if (viewModel.isLoading && viewModel.user == null) {
+                  return const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: CircularProgressIndicator(),
+                  );
+                }
+
+                final user = viewModel.user;
+                final displayName = user?.name ?? 'User';
+                final displayEmail = user?.email ?? '';
+                final imageUrl = user?.imageUrl;
+
+                return Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF86EFAC),
+                            shape: BoxShape.circle,
+                            image: imageUrl != null
+                                ? DecorationImage(
+                                    image: NetworkImage(imageUrl),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: imageUrl == null
+                              ? const Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.white,
+                                )
+                              : null,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () => _showImageSourceBottomSheet(viewModel),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0EA5E9),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 4,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E293B),
+                      ),
+                    ),
+                    Text(
+                      displayEmail,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (viewModel.errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        viewModel.errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 12),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: viewModel.isEditing
+                              ? null
+                              : () => _showEditProfileBottomSheet(viewModel),
+                          icon: const Icon(Icons.edit, size: 18),
+                          label: const Text('Edit Profile'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF475569),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 12,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.share_outlined,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 32),
 
             Padding(
@@ -42,8 +368,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Preferences Section
-                  _buildSectionTitle('PREFERENCES'),
-                  _buildPreferencesCard(),
+                  // Theme-related UI removed.
+                  const SizedBox(height: 0),
+
                   const SizedBox(height: 32),
 
                   // App Settings Section
@@ -72,92 +399,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Column(
-      children: [
-        Stack(
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: const BoxDecoration(
-                color: Color(0xFF86EFAC),
-                shape: BoxShape.circle,
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0EA5E9),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Mohamed Ali',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1E293B),
-          ),
-        ),
-        const Text(
-          'mohamed.ali@planno.app',
-          style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
-        ),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.edit, size: 18),
-              label: const Text('Edit Profile'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF475569),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.share_outlined,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 12),
@@ -173,88 +414,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  // Removed theme-related UI from Profile.
   Widget _buildPreferencesCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-      ),
-      child: Column(
-        children: [
-          _buildSettingsItem(
-            icon: Icons.dark_mode_outlined,
-            title: 'Dark Mode',
-            subtitle: 'Adjust screen brightness',
-            trailing: Switch(
-              value: isDarkMode,
-              onChanged: (val) => setState(() => isDarkMode = val),
-              activeColor: const Color(0xFF0EA5E9),
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF8FAFC)),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _buildIconBox(
-                      Icons.palette_outlined,
-                      const Color(0xFFE0F2FE),
-                      const Color(0xFF0EA5E9),
-                    ),
-                    const SizedBox(width: 16),
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'App Theme',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          'Select your primary color',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF94A3B8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.only(left: 56),
-                  child: Row(
-                    children: List.generate(themeColors.length, (index) {
-                      return GestureDetector(
-                        onTap: () => setState(() => selectedThemeIndex = index),
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 12),
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: themeColors[index],
-                            shape: BoxShape.circle,
-                            border: selectedThemeIndex == index
-                                ? Border.all(
-                                    color: const Color(0xFFCBD5E1),
-                                    width: 4,
-                                  )
-                                : null,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Widget _buildSettingsCard() {
@@ -309,14 +471,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             iconColor: const Color(0xFFEF4444),
             showChevron: false,
             onPressed: () async {
-              final authViewModel = Provider.of<AuthViewModel>(
-                context,
-                listen: false,
-              );
-              await authViewModel.logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
+              // Avoid any Navigator/GoRouter operations while widget tree is changing.
+              await Provider.of<AuthViewModel>(context, listen: false).logout();
+
+              if (!mounted) return;
+              // Use the app's router path for login.
+              context.go('/login');
             },
           ),
         ],

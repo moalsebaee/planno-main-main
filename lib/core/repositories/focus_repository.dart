@@ -1,29 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:planno/models/focus_session.dart';
+import '../../services/firestore_service.dart';
 
+/// Repository for focus-session-related operations.
+/// All data is automatically scoped to the current authenticated user
+/// via [FirestoreService]; no manual uid passing is required.
 class FocusRepository {
-  Stream<List<FocusSession>> streamFocusSessions([String? uid]) {
-    Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection(
-      'focus_sessions',
-    );
-    if (uid != null) {
-      query = query.where('userId', isEqualTo: uid);
-    }
-    return query
-        .orderBy('date', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => FocusSession.fromFirestore(doc.data(), doc.id))
-              .toList(),
-        );
-  }
+  final FirestoreService _firestoreService = FirestoreService();
 
-  Future<void> addFocusSession(FocusSession session) async {
-    await FirebaseFirestore.instance.collection('focus_sessions').add({
-      ...session.toFirestore(),
-      'userId': FirebaseAuth.instance.currentUser?.uid,
-    });
-  }
+  Stream<List<FocusSession>> streamFocusSessions() =>
+      _firestoreService.focusSessionsStream();
+
+  Future<void> addFocusSession(FocusSession session) =>
+      _firestoreService.addFocusSession(session);
 }

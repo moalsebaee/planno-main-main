@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+// import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:planno/models/task.dart';
+
 import 'package:provider/provider.dart';
 import '../viewmodels/task_viewmodel.dart';
 import '../core/repositories/task_repository.dart';
@@ -23,7 +25,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
   TimeOfDay selectedTime = const TimeOfDay(hour: 9, minute: 0);
   String priority = 'Medium';
   String category = 'Work';
-  LatLng? selectedLocation;
+  // LatLng? selectedLocation;
   double geofenceRadius = 500.0;
   bool setReminder = false;
 
@@ -32,8 +34,12 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     super.initState();
     if (widget.task != null) {
       _titleController.text = widget.task!.title;
-      _descriptionController.text = widget.task!.title; // Assuming description
-      // Load other fields from task
+      _descriptionController.text =
+          ''; // Description not currently present in Task model / firestore
+
+      // Prefill status/progress where possible
+      priority = widget.task!.status;
+      // Note: progress/deadline are stored in Task model, but this UI currently doesn't expose them.
     }
   }
 
@@ -77,6 +83,11 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (widget.task == null)
+                const SizedBox.shrink()
+              else
+                const SizedBox.shrink(),
+
               // Title Input
               Container(
                 width: double.infinity,
@@ -377,7 +388,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
                               ),
                             ),
                             Text(
-                              selectedLocation == null
+                              true
                                   ? 'Tap to set location-based reminder'
                                   : 'Location set',
                               style: TextStyle(color: Colors.grey.shade500),
@@ -556,7 +567,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     );
     if (result != null && result is Map<String, dynamic>) {
       setState(() {
-        selectedLocation = result['location'] as LatLng?;
+        // selectedLocation = result['location'] as LatLng?;
         geofenceRadius = result['radius'] as double;
       });
     }
@@ -566,23 +577,91 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null || _titleController.text.trim().isEmpty) return;
 
+    final isEditing = widget.task != null;
+
+    // Generate a fixed Firestore document ID on create.
+    // IMPORTANT: during editing, NEVER regenerate the id.
+    final String taskId = isEditing
+        ? (widget.task!.id)
+        : FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUser.uid)
+              .collection('tasks')
+              .doc()
+              .id;
+
+    // When editing, ensure we have a valid existing taskId.
+    if (isEditing && widget.task!.id.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invalid taskId for editing.')),
+      );
+      return;
+    }
+
     final taskData = Task(
-      id: '',
+      id: taskId,
       title: _titleController.text.trim(),
       status: priority,
-      progress: 0.0,
-      assignedTo: currentUser.uid,
-      createdAt: DateTime.now(),
+      progress: isEditing ? widget.task!.progress : 0.0,
+      assignedTo: isEditing ? widget.task!.assignedTo : currentUser.uid,
+      createdAt: isEditing ? widget.task!.createdAt : DateTime.now(),
+      deadline: widget.task?.deadline,
     );
 
     final taskViewModel = Provider.of<TaskViewModel>(context, listen: false);
-    await taskViewModel.addTask(taskData);
+    try {
+      if (isEditing) {
+        // Granular field update: only send changed fields.
+        final oldTask = widget.task!;
+        final newTitle = _titleController.text.trim();
+        final newStatus = priority;
+        final newDeadline = widget
+            .task
+            ?.deadline; // UI currently doesn't edit deadline datetime
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Task created successfully!')),
-      );
-      Navigator.pop(context);
+        // Description/category/location are not part of the Task model fields
+        // currently persisted in Firestore; keep updates limited to existing model fields.
+
+        if (newTitle != oldTask.title) {
+          await taskViewModel.updateTaskTitle(oldTask.id, newTitle);
+        }
+
+        if (newStatus != oldTask.status) {
+          await taskViewModel.updateTaskPriority(oldTask.id, newStatus);
+        }
+
+        // If you later expose deadline UI, update it using updateTaskDateTime.
+        if (newDeadline != oldTask.deadline) {
+          await taskViewModel.updateTaskDateTime(oldTask.id, newDeadline);
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Task updated successfully!')),
+          );
+          Navigator.pop(context);
+        }
+      } else {
+        await taskViewModel.addTask(taskData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Task created successfully!')),
+          );
+          Navigator.pop(context);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isEditing
+                  ? 'Failed to update task: $e'
+                  : 'Failed to create task: $e',
+            ),
+          ),
+        );
+      }
     }
   }
 

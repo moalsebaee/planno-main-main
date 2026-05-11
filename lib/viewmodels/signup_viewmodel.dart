@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../services/storage_service.dart';
 
 class SignUpViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -11,6 +13,9 @@ class SignUpViewModel extends ChangeNotifier {
   String confirmPassword = '';
   bool isLoading = false;
   String? errorMessage;
+  XFile? _selectedImage;
+
+  String? get imagePath => _selectedImage?.path;
 
   bool validateFullName() {
     if (fullName.isEmpty) {
@@ -87,11 +92,22 @@ class SignUpViewModel extends ChangeNotifier {
       );
       if (credential?.user != null) {
         final user = credential!.user!;
+        String? imageUrl;
+        if (_selectedImage != null) {
+          imageUrl = await StorageService().uploadProfileImage(
+            user.uid,
+            _selectedImage!,
+          );
+          if (imageUrl == null) {
+            errorMessage = 'Image upload failed, but account created';
+          }
+        }
         await _authService.updateDisplayName(fullName);
         await FirestoreService().createUserRecord(
           uid: user.uid,
           name: fullName,
           email: email,
+          imageUrl: imageUrl,
         );
       }
       isLoading = false;
@@ -105,6 +121,30 @@ class SignUpViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> pickImage() async {
+    try {
+      final picker = ImagePicker();
+      _selectedImage = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+      );
+      if (_selectedImage != null) {
+        errorMessage = null;
+      } else {
+        errorMessage = 'No image selected';
+      }
+      notifyListeners();
+    } catch (e) {
+      errorMessage = 'Failed to pick image: $e';
+      notifyListeners();
+    }
+  }
+
+  void setSelectedImage(XFile? image) {
+    _selectedImage = image;
+    notifyListeners();
+  }
+
   void clear() {
     fullName = '';
     email = '';
@@ -112,6 +152,7 @@ class SignUpViewModel extends ChangeNotifier {
     confirmPassword = '';
     errorMessage = null;
     isLoading = false;
+    _selectedImage = null;
     notifyListeners();
   }
 }

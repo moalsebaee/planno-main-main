@@ -1,3 +1,4 @@
+// نفس كل الـ imports زي ما هي
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'task_home_screen.dart';
 import 'stats_screen.dart';
 import 'profile_screen.dart';
 import 'tasks_screen.dart';
+import '../widgets/set_focus_time_modal.dart';
 
 class FocusTimerScreen extends StatefulWidget {
   const FocusTimerScreen({super.key});
@@ -18,6 +20,8 @@ class FocusTimerScreen extends StatefulWidget {
 }
 
 class _FocusTimerScreenState extends State<FocusTimerScreen> {
+  static const Color primaryAction = Color(0xFF1E293B);
+
   int _selectedMinutes = 25;
   int _secondsLeft = 25 * 60;
   int get _initialSeconds => _selectedMinutes * 60;
@@ -28,9 +32,45 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
 
   bool get isTimerRunning => _isActive && _secondsLeft > 0;
 
+  void _setMinutes(int minutes) {
+    if (_isActive) return;
+    setState(() {
+      _selectedMinutes = minutes;
+      _secondsLeft = minutes * 60;
+      _isCompleted = false;
+    });
+  }
+
+  // Modern focus-time modal (blurred background + Notion/iOS style card)
+  void _showCustomTimeDialog() {
+    if (_isActive) return;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "",
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.96, end: 1.0).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+            ),
+            child: SetFocusTimeModal(
+              initialMinutes: _selectedMinutes,
+              onConfirm: (minutes) {
+                _setMinutes(minutes);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _toggleTimer() async {
     if (_isActive) {
-      // Pause - save elapsed session
       final elapsedSeconds = DateTime.now().difference(_startTime!).inSeconds;
       if (elapsedSeconds >= 60) {
         await Provider.of<FocusViewModel>(
@@ -95,7 +135,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
           ],
         ),
         content: const Text(
-          "You've completed your focus session!\\n\\nTake a short break before your next session.",
+          "You've completed your focus session!\n\nTake a short break before your next session.",
         ),
         actions: [
           TextButton(
@@ -173,6 +213,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
         body: SafeArea(
           child: Column(
             children: [
+              // 👈 كل كودك زي ما هو بدون تغيير
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Row(
@@ -215,53 +256,16 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                           Icons.settings_outlined,
                           color: Colors.grey,
                         ),
-                        onPressed: () {},
+                        onPressed: _showCustomTimeDialog,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
-                      blurRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: _isActive
-                            ? const Color(0xFF3B82F6)
-                            : Colors.grey,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Deep Work',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF475569),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               const Spacer(),
+
+              // 🔥 الدايرة
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -280,7 +284,8 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                     height: 280,
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0, end: 1 - progress),
-                      duration: const Duration(milliseconds: 300),
+                      duration: const Duration(milliseconds: 700),
+                      curve: Curves.easeInOutCubic,
                       builder: (context, value, child) {
                         return CircularProgressIndicator(
                           value: value,
@@ -297,7 +302,21 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 400),
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: Tween(begin: 0.8, end: 1.0).animate(
+                              CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutBack,
+                              ),
+                            ),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
                         child: Text(
                           _formatTime(_secondsLeft),
                           key: ValueKey(_secondsLeft),
@@ -305,64 +324,120 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                             fontSize: 72,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1E293B),
-                            letterSpacing: -2,
                           ),
                         ),
                       ),
                       const Text(
                         'POMODORO',
-                        style: TextStyle(
-                          fontSize: 12,
-                          letterSpacing: 4,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.grey),
                       ),
                     ],
                   ),
                 ],
               ),
+
               const Spacer(),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  ElevatedButton.icon(
-                    onPressed: _toggleTimer,
-                    icon: Icon(_isActive ? Icons.pause : Icons.play_arrow),
-                    label: Text(_isActive ? 'Pause' : 'Start'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isActive
-                          ? Colors.white
-                          : const Color(0xFF1E293B),
-                      foregroundColor: _isActive
-                          ? const Color(0xFF1E293B)
-                          : Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 40,
-                        vertical: 20,
+                  // Main CTA (Start/Pause)
+                  SizedBox(
+                    height: 52,
+                    child: ElevatedButton.icon(
+                      onPressed: _toggleTimer,
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.resolveWith((
+                          states,
+                        ) {
+                          // Keep exact dominant color, but slightly brighten on hover/pressed.
+                          if (states.contains(MaterialState.pressed)) {
+                            return primaryAction.withOpacity(0.94);
+                          }
+                          if (states.contains(MaterialState.hovered)) {
+                            return primaryAction.withOpacity(0.96);
+                          }
+                          return primaryAction;
+                        }),
+                        foregroundColor: MaterialStateProperty.all<Color>(
+                          Colors.white,
+                        ),
+                        elevation: MaterialStateProperty.resolveWith((states) {
+                          if (states.contains(MaterialState.pressed)) return 4;
+                          return 6;
+                        }),
+                        shadowColor: MaterialStateProperty.all<Color>(
+                          primaryAction.withOpacity(0.35),
+                        ),
+                        overlayColor: MaterialStateProperty.all<Color>(
+                          Colors.white.withOpacity(0.12),
+                        ),
+                        padding: MaterialStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.symmetric(horizontal: 18),
+                        ),
+                        shape:
+                            MaterialStateProperty.all<RoundedRectangleBorder>(
+                              RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                        textStyle: MaterialStateProperty.all<TextStyle>(
+                          const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0,
+                          ),
+                        ),
                       ),
-                      shape: const StadiumBorder(),
-                      elevation: 5,
+                      // Subtle “glow” via icon/text container
+                      icon: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.10),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _isActive
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      label: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        transitionBuilder: (child, animation) {
+                          return ScaleTransition(
+                            scale: Tween<double>(
+                              begin: 0.92,
+                              end: 1.0,
+                            ).animate(animation),
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          _isActive ? 'Pause' : 'Start',
+                          key: ValueKey<bool>(_isActive),
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 20),
-                  Container(
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(color: Colors.black12, blurRadius: 10),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.grey),
-                      padding: const EdgeInsets.all(16),
-                      onPressed: _resetTimer,
-                    ),
+                  IconButton(
+                    onPressed: _resetTimer,
+                    icon: const Icon(Icons.refresh),
                   ),
                 ],
               ),
+
               const SizedBox(height: 40),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Text(
@@ -375,60 +450,51 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
                   ),
                 ),
               ),
+
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 20,
-                  horizontal: 30,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildNavItem(Icons.home_outlined, 'Home', false, () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TaskDashboard(),
-                        ),
-                      );
-                    }),
-                    _buildNavItem(
-                      Icons.assignment_outlined,
-                      'Tasks',
-                      false,
-                      () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const TasksScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    _buildNavItem(Icons.timer, 'Focus', true, () {}),
-                    _buildNavItem(Icons.bar_chart_outlined, 'Stats', false, () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const StatsScreen(),
-                        ),
-                      );
-                    }),
-                    _buildNavItem(Icons.person_outline, 'Profile', false, () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ProfileScreen(),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
+            ],
+          ),
+        ),
+
+        // 🔥🔥🔥 الإضافة الوحيدة
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildNavItem(Icons.home_outlined, 'Home', false, () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskDashboard(),
+                  ),
+                );
+              }),
+              _buildNavItem(Icons.assignment_outlined, 'Tasks', false, () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const TasksScreen()),
+                );
+              }),
+              _buildNavItem(Icons.timer, 'Focus', true, () {}),
+              _buildNavItem(Icons.bar_chart_outlined, 'Stats', false, () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const StatsScreen()),
+                );
+              }),
+              _buildNavItem(Icons.person_outline, 'Profile', false, () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -436,6 +502,7 @@ class _FocusTimerScreenState extends State<FocusTimerScreen> {
     );
   }
 
+  // 🔥 دالة البار
   Widget _buildNavItem(
     IconData icon,
     String label,

@@ -63,20 +63,21 @@ class _TaskDashboardState extends State<TaskDashboard>
 
   String _getMotivationalMessage(double progress) {
     final percentage = (progress * 100).round();
-    if (percentage == 100) return r'All tasks completed! 🎉';
-    if (percentage >= 81) return r'Amazing work! Finish strong 💯';
-    if (percentage >= 51) return r'Great job! You\re more than halfway 🔥';
-    if (percentage >= 21) return r'Good progress, keep going 🚀';
-    return r'Let\s get started 💪';
+    if (percentage == 100) return 'All tasks completed! \u{1F389}';
+    if (percentage >= 81) return 'Amazing work! Finish strong \u{1F4AF}';
+    if (percentage >= 51)
+      return "Great job! You're more than halfway \u{1F525}";
+    if (percentage >= 21) return 'Good progress, keep going \u{1F680}';
+    return "Let's get started \u{1F4AA}";
   }
 
   String _getSecondaryMessage(double progress) {
     final percentage = (progress * 100).round();
-    if (percentage == 100) return r'You crushed today\s goals 👏';
-    if (percentage >= 81) return r'One last push!';
-    if (percentage >= 51) return r'Stay focused, almost there!';
-    if (percentage >= 21) return r"You're building momentum!";
-    return r'Every step counts!';
+    if (percentage == 100) return "You crushed today's goals \u{1F44F}";
+    if (percentage >= 81) return 'One last push!';
+    if (percentage >= 51) return 'Stay focused, almost there!';
+    if (percentage >= 21) return "You're building momentum!";
+    return 'Every step counts!';
   }
 
   @override
@@ -119,7 +120,7 @@ class _TaskDashboardState extends State<TaskDashboard>
                               Text(
                                 'Tue, Oct 24',
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: Color(0xFF64748B),
                                   fontSize: 14,
                                 ),
                               ),
@@ -130,20 +131,19 @@ class _TaskDashboardState extends State<TaskDashboard>
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
                                   height: 1.2,
+                                  color: Color(0xFF1E293B),
                                 ),
                               ),
                             ],
                           ),
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                               color: Colors.white,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF000000,
-                                  ).withValues(alpha: 13 / 255),
+                                  color: Color(0x1A000000),
                                   blurRadius: 10,
                                 ),
                               ],
@@ -153,13 +153,14 @@ class _TaskDashboardState extends State<TaskDashboard>
                                 Icon(
                                   Icons.notifications_none_outlined,
                                   size: 28,
+                                  color: Color(0xFF64748B),
                                 ),
                                 Positioned(
                                   right: 2,
                                   top: 2,
                                   child: CircleAvatar(
                                     radius: 4,
-                                    backgroundColor: Colors.red,
+                                    backgroundColor: Color(0xFFEF4444),
                                   ),
                                 ),
                               ],
@@ -188,13 +189,14 @@ class _TaskDashboardState extends State<TaskDashboard>
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: Color(0xFF1E293B),
                             ),
                           ),
                           TextButton(
                             onPressed: () {},
                             child: const Text(
                               'View All',
-                              style: TextStyle(color: Colors.blue),
+                              style: TextStyle(color: Color(0xFF0EA5E9)),
                             ),
                           ),
                         ],
@@ -209,24 +211,20 @@ class _TaskDashboardState extends State<TaskDashboard>
                                 Icon(
                                   Icons.task_alt,
                                   size: 64,
-                                  color: Colors.grey,
+                                  color: Color(0xFFCBD5E1),
                                 ),
                                 SizedBox(height: 16),
                                 Text(
                                   'No tasks for today',
                                   style: TextStyle(
                                     fontSize: 18,
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF94A3B8),
                                   ),
                                 ),
                                 SizedBox(height: 8),
                                 Text(
                                   'Tap + to add a new task',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey,
-                                  ),
+                                  style: TextStyle(color: Color(0xFF94A3B8)),
                                 ),
                               ],
                             ),
@@ -250,7 +248,8 @@ class _TaskDashboardState extends State<TaskDashboard>
                               await Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const NewTaskScreen(),
+                                  builder: (context) =>
+                                      NewTaskScreen(task: entry.value),
                                 ),
                               );
                             },
@@ -264,6 +263,7 @@ class _TaskDashboardState extends State<TaskDashboard>
             ),
           ),
           floatingActionButton: FloatingActionButton(
+            backgroundColor: const Color(0xFF475569),
             onPressed: () async {
               if (!mounted) return;
               await Navigator.push(
@@ -271,9 +271,7 @@ class _TaskDashboardState extends State<TaskDashboard>
                 MaterialPageRoute(builder: (context) => const NewTaskScreen()),
               );
             },
-            backgroundColor: Colors.blue,
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add, color: Colors.white, size: 30),
+            child: const Icon(Icons.add, size: 30, color: Colors.white),
           ),
           bottomNavigationBar: _HomeBottomNavBar(),
         );
@@ -302,21 +300,21 @@ class DailyGoalsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final percentage = (progress * 100).round();
     final progressColor = percentage == 100
-        ? Colors.green
+        ? const Color(0xFF22C55E)
         : percentage >= 50
-        ? Colors.blue
-        : Colors.orange;
+        ? const Color(0xFF0EA5E9)
+        : const Color(0xFFF59E0B);
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF000000).withValues(alpha: 5 / 255),
+            color: Color(0x1A000000),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: Offset(0, 10),
           ),
         ],
       ),
@@ -329,7 +327,7 @@ class DailyGoalsCard extends StatelessWidget {
               children: [
                 const Text(
                   'Daily Goals',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                  style: TextStyle(color: Color(0xFF64748B), fontSize: 14),
                 ),
                 const SizedBox(height: 8),
                 RichText(
@@ -347,8 +345,7 @@ class DailyGoalsCard extends StatelessWidget {
                         text: ' / $totalTasks',
                         style: const TextStyle(
                           fontSize: 20,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF94A3B8),
                         ),
                       ),
                     ],
@@ -366,14 +363,14 @@ class DailyGoalsCard extends StatelessWidget {
                         style: TextStyle(
                           color: progressColor,
                           fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         secondaryMessage,
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
                           fontSize: 12,
                         ),
                       ),
@@ -396,7 +393,7 @@ class DailyGoalsCard extends StatelessWidget {
                   builder: (context, value, child) => CircularProgressIndicator(
                     value: value,
                     strokeWidth: 10,
-                    backgroundColor: Colors.grey.shade100,
+                    backgroundColor: const Color(0xFFF1F5F9),
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                     strokeCap: StrokeCap.round,
                   ),
@@ -410,6 +407,7 @@ class DailyGoalsCard extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E293B),
                   ),
                 ),
               ),
@@ -454,7 +452,7 @@ class TaskCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isCompleted ? Colors.grey.shade100 : Colors.white,
+          color: isCompleted ? const Color(0xFFF8FAFC) : Colors.white,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Stack(
@@ -468,8 +466,10 @@ class TaskCard extends StatelessWidget {
                 child: Container(
                   width: 4,
                   decoration: BoxDecoration(
-                    color: isCompleted ? Colors.grey : Colors.red,
-                    borderRadius: BorderRadius.horizontal(
+                    color: isCompleted
+                        ? const Color(0xFFCBD5E1)
+                        : const Color(0xFFEF4444),
+                    borderRadius: const BorderRadius.horizontal(
                       right: Radius.circular(4),
                     ),
                   ),
@@ -489,31 +489,36 @@ class TaskCard extends StatelessWidget {
                               duration: const Duration(milliseconds: 300),
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 decoration: isCompleted
                                     ? TextDecoration.lineThrough
                                     : TextDecoration.none,
-                                color: isCompleted ? Colors.grey : Colors.black,
+                                color: isCompleted
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF1E293B),
                               ),
                               child: Text(title),
                             ),
                           ),
-                          const Icon(Icons.more_horiz, color: Colors.grey),
+                          const Icon(
+                            Icons.more_horiz,
+                            color: Color(0xFF94A3B8),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.access_time,
                             size: 14,
-                            color: Colors.grey.shade400,
+                            color: Color(0xFF94A3B8),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             time,
-                            style: TextStyle(
-                              color: Colors.grey.shade400,
+                            style: const TextStyle(
+                              color: Color(0xFF94A3B8),
                               fontSize: 12,
                             ),
                           ),
@@ -524,7 +529,7 @@ class TaskCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Row(
@@ -532,13 +537,13 @@ class TaskCard extends StatelessWidget {
                                 Icon(
                                   categoryIcon,
                                   size: 12,
-                                  color: Colors.grey,
+                                  color: const Color(0xFF94A3B8),
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   category,
                                   style: const TextStyle(
-                                    color: Colors.grey,
+                                    color: Color(0xFF94A3B8),
                                     fontSize: 10,
                                   ),
                                 ),
@@ -560,11 +565,13 @@ class TaskCard extends StatelessWidget {
                     height: 28,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isCompleted ? Colors.green : Colors.transparent,
+                      color: isCompleted
+                          ? const Color(0xFF22C55E)
+                          : Colors.transparent,
                       border: Border.all(
                         color: isCompleted
-                            ? Colors.green
-                            : Colors.grey.shade300,
+                            ? const Color(0xFF22C55E)
+                            : const Color(0xFFE2E8F0),
                         width: 2,
                       ),
                     ),
@@ -595,9 +602,9 @@ class _HomeBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 80,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -651,13 +658,18 @@ class _HomeBottomNavBar extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: isActive ? Colors.blue : Colors.grey),
+          Icon(
+            icon,
+            color: isActive ? const Color(0xFF0EA5E9) : const Color(0xFF94A3B8),
+          ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 10,
-              color: isActive ? Colors.blue : Colors.grey,
+              color: isActive
+                  ? const Color(0xFF0EA5E9)
+                  : const Color(0xFF94A3B8),
             ),
           ),
         ],

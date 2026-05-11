@@ -1,1 +1,28 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"planno-bdf6a","appId":"1:152119704745:android:7a340ae3d4ebfc07ccbdb8","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"planno-bdf6a","configurations":{"android":"1:152119704745:android:7a340ae3d4ebfc07ccbdb8","ios":"1:152119704745:ios:075d3f6fdea3f2daccbdb8","macos":"1:152119704745:ios:075d3f6fdea3f2daccbdb8","web":"1:152119704745:web:b5aa01a590289ee4ccbdb8","windows":"1:152119704745:web:f34d015910dce344ccbdb8"}}}}}}
+{
+    "firestore": {
+        "rules": "firestore.rules"
+    },
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "planno-bdf6a",
+                    "appId": "1:152119704745:android:7a340ae3d4ebfc07ccbdb8",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "planno-bdf6a",
+                    "configurations": {
+                        "android": "1:152119704745:android:7a340ae3d4ebfc07ccbdb8",
+                        "ios": "1:152119704745:ios:075d3f6fdea3f2daccbdb8",
+                        "macos": "1:152119704745:ios:075d3f6fdea3f2daccbdb8",
+                        "web": "1:152119704745:web:b5aa01a590289ee4ccbdb8",
+                        "windows": "1:152119704745:web:f34d015910dce344ccbdb8"
+                    }
+                }
+            }
+        }
+    }
+}

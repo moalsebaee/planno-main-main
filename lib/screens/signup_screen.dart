@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/signup_viewmodel.dart';
 import 'login_screen.dart';
@@ -16,6 +18,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
   late final TextEditingController _confirmPasswordController;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -33,6 +36,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source, SignUpViewModel viewModel) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source, imageQuality: 70);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+      viewModel.setSelectedImage(pickedFile);
+    }
+    if (mounted) Navigator.pop(context);
+  }
+
+  void _showImageSourceBottomSheet(SignUpViewModel viewModel) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Select Photo',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2D3E50),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library,
+                    color: Color(0xFF0085FF),
+                  ),
+                  title: const Text('Gallery'),
+                  onTap: () => _pickImage(ImageSource.gallery, viewModel),
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.camera_alt,
+                    color: Color(0xFF0085FF),
+                  ),
+                  title: const Text('Camera'),
+                  onTap: () => _pickImage(ImageSource.camera, viewModel),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -53,7 +114,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       borderRadius: BorderRadius.circular(40),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -76,10 +137,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     color: Colors.white,
                                     shape: BoxShape.circle,
                                     boxShadow: [
-                                      BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10),
+                                      BoxShadow(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        blurRadius: 10,
+                                      ),
                                     ],
                                   ),
-                                  child: Icon(Icons.arrow_back_ios_new, size: 20, color: Colors.grey[700]),
+                                  child: Icon(
+                                    Icons.arrow_back_ios_new,
+                                    size: 20,
+                                    color: Colors.grey[700],
+                                  ),
                                 ),
                               ),
                               const Text(
@@ -98,43 +168,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         // Profile Photo
                         Column(
                           children: [
-                            Stack(
-                              children: [
-                                Container(
-                                  width: 120,
-                                  height: 120,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                      width: 2,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 40,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 5,
-                                  right: 5,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(6),
+                            GestureDetector(
+                              onTap: () =>
+                                  _showImageSourceBottomSheet(viewModel),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 120,
+                                    height: 120,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF0085FF),
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                        width: 2,
+                                      ),
+                                      image: _selectedImage != null
+                                          ? DecorationImage(
+                                              image: FileImage(_selectedImage!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
                                     ),
-                                    child: const Icon(Icons.add, color: Colors.white, size: 18),
+                                    child: _selectedImage == null
+                                        ? Icon(
+                                            Icons.camera_alt_outlined,
+                                            size: 40,
+                                            color: Colors.grey.shade300,
+                                          )
+                                        : null,
                                   ),
-                                ),
-                              ],
+                                  Positioned(
+                                    bottom: 5,
+                                    right: 5,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF0085FF),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: Colors.white,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.add,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                             const SizedBox(height: 10),
                             const Text(
                               'Add Photo',
-                              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -152,39 +244,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.red.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.red.shade200),
+                                    border: Border.all(
+                                      color: Colors.red.shade200,
+                                    ),
                                   ),
                                   child: Text(
                                     viewModel.errorMessage!,
-                                    style: TextStyle(color: Colors.red.shade700),
+                                    style: TextStyle(
+                                      color: Colors.red.shade700,
+                                    ),
                                   ),
                                 ),
                               ],
                               _buildLabel('Full Name'),
-                              _buildTextField(_fullNameController, 'John Doe', Icons.person_outline, viewModel),
+                              _buildTextField(
+                                _fullNameController,
+                                'John Doe',
+                                Icons.person_outline,
+                                viewModel,
+                              ),
                               const SizedBox(height: 20),
                               _buildLabel('Email Address'),
-                              _buildTextField(_emailController, 'john@example.com', Icons.mail_outline, viewModel),
+                              _buildTextField(
+                                _emailController,
+                                'john@example.com',
+                                Icons.mail_outline,
+                                viewModel,
+                              ),
                               const SizedBox(height: 20),
                               _buildLabel('Password'),
-                              _buildTextField(_passwordController, '••••••••', Icons.lock_outline, viewModel, isPassword: true),
+                              _buildTextField(
+                                _passwordController,
+                                '••••••••',
+                                Icons.lock_outline,
+                                viewModel,
+                                isPassword: true,
+                              ),
                               const SizedBox(height: 20),
                               _buildLabel('Confirm Password'),
-                              _buildTextField(_confirmPasswordController, '••••••••', Icons.shield_outlined, viewModel, isPassword: true),
+                              _buildTextField(
+                                _confirmPasswordController,
+                                '••••••••',
+                                Icons.shield_outlined,
+                                viewModel,
+                                isPassword: true,
+                              ),
                               const SizedBox(height: 40),
                               // Submit Button
                               SizedBox(
                                 width: double.infinity,
                                 height: 65,
                                 child: GestureDetector(
-                                  onTap: viewModel.isLoading 
-                                      ? null 
+                                  onTap: viewModel.isLoading
+                                      ? null
                                       : () async {
-                                          final success = await viewModel.signUp();
+                                          final success = await viewModel
+                                              .signUp();
                                           if (success && context.mounted) {
                                             Navigator.pushReplacement(
                                               context,
-                                              MaterialPageRoute(builder: (context) => const TaskDashboard()),
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const TaskDashboard(),
+                                              ),
                                             );
                                           }
                                         },
@@ -192,25 +314,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       ? Container(
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF4A5D67),
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.1),
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.1,
+                                                ),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 5),
                                               ),
                                             ],
                                           ),
                                           child: const Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               SizedBox(
                                                 height: 20,
                                                 width: 20,
-                                                child: CircularProgressIndicator(
-                                                  color: Colors.white,
-                                                  strokeWidth: 2,
-                                                ),
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -218,17 +346,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                       : Container(
                                           decoration: BoxDecoration(
                                             color: const Color(0xFF4A5D67),
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(0.1),
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.1,
+                                                ),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 5),
                                               ),
                                             ],
                                           ),
                                           child: const Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               Text(
                                                 'Create Account',
@@ -239,7 +372,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                                 ),
                                               ),
                                               SizedBox(width: 10),
-                                              Icon(Icons.arrow_forward, color: Colors.white),
+                                              Icon(
+                                                Icons.arrow_forward,
+                                                color: Colors.white,
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -253,7 +389,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => const SignInPage(),
+                                        builder: (context) =>
+                                            const SignInPage(),
                                       ),
                                     );
                                   },
@@ -289,7 +426,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
         ),
-      )
+      ),
     );
   }
 
@@ -323,7 +460,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           border: Border.all(color: Colors.grey.shade100),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),
@@ -337,7 +474,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
             if (controller == _fullNameController) viewModel.fullName = value;
             if (controller == _emailController) viewModel.email = value;
             if (controller == _passwordController) viewModel.password = value;
-            if (controller == _confirmPasswordController) viewModel.confirmPassword = value;
+            if (controller == _confirmPasswordController) {
+              viewModel.confirmPassword = value;
+            }
             if (viewModel.errorMessage != null && value.isNotEmpty) {
               viewModel.errorMessage = null;
             }
@@ -347,7 +486,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
             hintStyle: TextStyle(color: Colors.grey.shade300),
             prefixIcon: Icon(icon, color: Colors.grey.shade400),
             suffixIcon: isPassword
-                ? Icon(Icons.visibility_off_outlined, color: Colors.grey.shade400)
+                ? Icon(
+                    Icons.visibility_off_outlined,
+                    color: Colors.grey.shade400,
+                  )
                 : null,
             border: InputBorder.none,
             contentPadding: const EdgeInsets.symmetric(

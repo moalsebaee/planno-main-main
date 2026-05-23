@@ -9,6 +9,8 @@ import 'focus_timer_screen.dart';
 import 'stats_screen.dart';
 import 'profile_screen.dart';
 
+import '../viewmodels/profile_viewmodel.dart';
+
 // Task model moved to main.dart
 
 class TasksScreen extends StatefulWidget {
@@ -21,10 +23,195 @@ class TasksScreen extends StatefulWidget {
 class _TasksScreenState extends State<TasksScreen> {
   int _activeTab = 1;
 
+  void _showPendingTasksSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      enableDrag: true,
+      builder: (sheetContext) {
+        return Consumer<TaskViewModel>(
+          builder: (context, taskViewModel, child) {
+            final pendingTasks = taskViewModel.getPendingTasks();
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {},
+              child: Container(
+                margin: const EdgeInsets.only(top: 24),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFCBD5E1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.notifications_active,
+                          color: Color(0xFF0EA5E9),
+                        ),
+                        const SizedBox(width: 10),
+                        const Text(
+                          'Pending Tasks',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (pendingTasks.isEmpty)
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'No pending tasks 🎉',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color(0xFF1E293B),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: ListView.separated(
+                          itemCount: pendingTasks.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final task = pendingTasks[index];
+
+                            // Ensure description exists for Task model
+                            // (older tasks may not have it yet)
+                            final _desc = task.description;
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          task.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (task.deadline != null)
+                                          Row(
+                                            children: [
+                                              const Icon(
+                                                Icons.access_time,
+                                                size: 14,
+                                                color: Colors.grey,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                task.time,
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFFF5F5),
+                                            borderRadius: BorderRadius.circular(
+                                              999,
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            'Pending',
+                                            style: TextStyle(
+                                              color: Colors.red,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Refresh when navigating back with new tasks
+  }
+
+  String getGreeting() {
+    // 5 AM → 11:59 AM: Good Morning
+    // 12 PM → 4:59 PM: Good Afternoon
+    // 5 PM → 11:59 PM: Good Evening
+    // 12 AM → 4:59 AM: Good Night
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour <= 11) return 'Good Morning';
+    if (hour >= 12 && hour <= 16) return 'Good Afternoon';
+    if (hour >= 17 && hour <= 23) return 'Good Evening';
+    return 'Good Night';
   }
 
   String _getFormattedDate() {
@@ -106,46 +293,71 @@ class _TasksScreenState extends State<TasksScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            const Text(
-              "Good Morning,\nMohamed",
-              style: TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-              ),
+            Consumer<ProfileViewModel>(
+              builder: (context, profileViewModel, child) {
+                final rawName = profileViewModel.user?.name?.trim();
+                final safeName = (rawName == null || rawName.isEmpty)
+                    ? 'User'
+                    : rawName;
+                final greeting = getGreeting();
+                return Text(
+                  '$greeting,\n$safeName',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    height: 1.2,
+                  ),
+                );
+              },
             ),
           ],
         ),
-        Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
+        Consumer<TaskViewModel>(
+          builder: (context, taskViewModel, child) {
+            final pendingCount = taskViewModel.getPendingTasks().length;
+            return Stack(
+              children: [
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _showPendingTasksSheet(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.notifications_none,
+                        color: Colors.grey,
+                      ),
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(Icons.notifications_none, color: Colors.grey),
-            ),
-            Positioned(
-              right: 12,
-              top: 12,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
                 ),
-              ),
-            ),
-          ],
+                if (pendingCount > 0)
+                  Positioned(
+                    right: 12,
+                    top: 12,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -211,6 +423,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     orElse: () => Task(
                       id: '',
                       title: "No pending tasks",
+                      description: '',
                       status: 'pending',
                       progress: 0.0,
                       assignedTo: '',

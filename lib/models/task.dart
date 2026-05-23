@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Task {
   final String id;
   final String title;
+  final String description;
   final String status; // 'pending', 'in_progress', 'completed'
   final double progress; // 0.0 to 1.0
   final String assignedTo; // user uid
@@ -13,6 +14,7 @@ class Task {
   Task({
     required this.id,
     required this.title,
+    required this.description,
     required this.status,
     required this.progress,
     required this.assignedTo,
@@ -24,6 +26,7 @@ class Task {
     return Task(
       id: id,
       title: map['title'] as String? ?? '',
+      description: map['description'] as String? ?? '',
       status: map['status'] as String? ?? 'pending',
       progress: (map['progress'] as num?)?.toDouble() ?? 0.0,
       assignedTo: map['assignedTo'] as String? ?? '',
@@ -35,6 +38,7 @@ class Task {
   Map<String, dynamic> toMap() {
     return {
       'title': title,
+      'description': description,
       'status': status,
       'progress': progress,
       'assignedTo': assignedTo,

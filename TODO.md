@@ -1,7 +1,6 @@
-- [ ] Inspect Android build configuration (done)
-- [x] Update AGP to compatible stable version (8.7.2 -> 8.9.1)
-- [x] Ensure Gradle wrapper/Kotlin/Java/SDK settings remain consistent
-- [x] Verify no dependency conflict overrides are introduced
-- [ ] Final compatibility versions table
-- [x] Provide build success instructions (flutter clean + flutter build)
-
+- [x] Update New Task screen delete button: make text red (Colors.red) while keeping trash icon + spacing
+- [x] Add confirmation dialog before deleting
+- [x] On confirm: call TaskViewModel.deleteTask(widget.task!.id)
+- [x] After successful deletion: Navigator.pop(context)
+- [x] If widget.task == null: disable/ignore delete action
+- [ ] Verify build (flutter analyze)

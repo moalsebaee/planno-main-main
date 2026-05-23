@@ -16,6 +16,8 @@ class _SignInPageState extends State<SignInPage> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
+  bool isPasswordHidden = true;
+
   @override
   void initState() {
     super.initState();
@@ -134,7 +136,7 @@ class _SignInPageState extends State<SignInPage> {
                         // Password Field
                         TextField(
                           controller: _passwordController,
-                          obscureText: true,
+                          obscureText: isPasswordHidden,
                           onChanged: (value) {
                             viewModel.password = value;
                             if (viewModel.errorMessage != null &&
@@ -144,8 +146,20 @@ class _SignInPageState extends State<SignInPage> {
                           },
                           decoration: InputDecoration(
                             prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: const Icon(
-                              Icons.visibility_off_outlined,
+                            suffixIcon: IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                isPasswordHidden
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color: Colors.grey.shade400,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordHidden = !isPasswordHidden;
+                                });
+                              },
                             ),
                             hintText: "••••••••",
                             filled: true,

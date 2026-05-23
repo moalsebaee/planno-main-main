@@ -34,8 +34,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     super.initState();
     if (widget.task != null) {
       _titleController.text = widget.task!.title;
-      _descriptionController.text =
-          ''; // Description not currently present in Task model / firestore
+      _descriptionController.text = widget.task!.description;
 
       // Prefill status/progress where possible
       priority = widget.task!.status;
@@ -65,14 +64,37 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
         centerTitle: false,
         actions: [
           TextButton(
-            onPressed: _titleController.text.trim().isEmpty ? null : _saveTask,
-            child: const Text(
-              'Done',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0EA5E9),
-              ),
+            onPressed: (widget.task == null) ? null : _confirmAndDeleteTask,
+            child: Row(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.fromBorderSide(
+                      const BorderSide(color: Color(0xFFFFCDD2), width: 1),
+                    ),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.delete, size: 18, color: Colors.red),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Delete',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -467,7 +489,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
                       ? null
                       : _saveTask,
                   child: const Text(
-                    'Create Task',
+                    'Save',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -573,8 +595,55 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     }
   }
 
+  Future<void> _confirmAndDeleteTask() async {
+    if (widget.task == null) return;
+
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          content: const Text('Are you sure you want to delete this task?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+
+    final taskViewModel = Provider.of<TaskViewModel>(context, listen: false);
+    await taskViewModel.deleteTask(widget.task!.id);
+
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+
+  void _clearForm() {
+    setState(() {
+      _titleController.clear();
+      _descriptionController.clear();
+      selectedDate = DateTime.now();
+      selectedTime = const TimeOfDay(hour: 9, minute: 0);
+      priority = 'Medium';
+      category = 'Work';
+      geofenceRadius = 500.0;
+      setReminder = false;
+    });
+
+    Navigator.pop(context);
+  }
+
   Future<void> _saveTask() async {
     final currentUser = FirebaseAuth.instance.currentUser;
+
     if (currentUser == null || _titleController.text.trim().isEmpty) return;
 
     final isEditing = widget.task != null;
@@ -601,6 +670,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
     final taskData = Task(
       id: taskId,
       title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
       status: priority,
       progress: isEditing ? widget.task!.progress : 0.0,
       assignedTo: isEditing ? widget.task!.assignedTo : currentUser.uid,
@@ -619,8 +689,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
             .task
             ?.deadline; // UI currently doesn't edit deadline datetime
 
-        // Description/category/location are not part of the Task model fields
-        // currently persisted in Firestore; keep updates limited to existing model fields.
+        final newDescription = _descriptionController.text.trim();
 
         if (newTitle != oldTask.title) {
           await taskViewModel.updateTaskTitle(oldTask.id, newTitle);
@@ -628,6 +697,10 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
 
         if (newStatus != oldTask.status) {
           await taskViewModel.updateTaskPriority(oldTask.id, newStatus);
+        }
+
+        if (newDescription != oldTask.description) {
+          await taskViewModel.updateTaskDescription(oldTask.id, newDescription);
         }
 
         // If you later expose deadline UI, update it using updateTaskDateTime.

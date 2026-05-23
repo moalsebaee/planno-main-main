@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:planno/screens/new_task_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'package:planno/viewmodels/profile_viewmodel.dart';
 import '../viewmodels/task_viewmodel.dart';
 import 'focus_timer_screen.dart';
 import 'stats_screen.dart';
@@ -51,6 +52,14 @@ class _TaskDashboardState extends State<TaskDashboard>
     super.dispose();
   }
 
+  String getGreetingByTime() {
+    final hour = DateTime.now().hour;
+    if (hour >= 5 && hour <= 11) return 'Good Morning';
+    if (hour >= 12 && hour <= 16) return 'Good Afternoon';
+    if (hour >= 17 && hour <= 23) return 'Good Evening';
+    return 'Good Night';
+  }
+
   Future<void> _toggleTaskCompletion(String taskId) async {
     if (!mounted) return;
     final taskViewModel = Provider.of<TaskViewModel>(context, listen: false);
@@ -65,8 +74,7 @@ class _TaskDashboardState extends State<TaskDashboard>
     final percentage = (progress * 100).round();
     if (percentage == 100) return 'All tasks completed! \u{1F389}';
     if (percentage >= 81) return 'Amazing work! Finish strong \u{1F4AF}';
-    if (percentage >= 51)
-      return "Great job! You're more than halfway \u{1F525}";
+    if (percentage >= 51) return "Great job! You're more than halfway \u{1F525}";
     if (percentage >= 21) return 'Good progress, keep going \u{1F680}';
     return "Let's get started \u{1F4AA}";
   }
@@ -114,56 +122,341 @@ class _TaskDashboardState extends State<TaskDashboard>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Column(
+                          Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Tue, Oct 24',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Color(0xFF64748B),
                                   fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
-                              Text(
-                                'Good Morning,\nMohamed',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.2,
-                                  color: Color(0xFF1E293B),
-                                ),
+                              const SizedBox(height: 4),
+                              Consumer<ProfileViewModel>(
+                                builder: (context, profileViewModel, child) {
+                                  final rawName =
+                                      profileViewModel.user?.name?.trim();
+                                  final safeName =
+                                      (rawName == null || rawName.isEmpty)
+                                          ? 'User'
+                                          : rawName;
+                                  final greeting = getGreetingByTime();
+                                  return Text(
+                                    '$greeting,\n$safeName',
+                                    style: const TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.2,
+                                      color: Color(0xFF1E293B),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0x1A000000),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: const Stack(
-                              children: [
-                                Icon(
-                                  Icons.notifications_none_outlined,
-                                  size: 28,
-                                  color: Color(0xFF64748B),
-                                ),
-                                Positioned(
-                                  right: 2,
-                                  top: 2,
-                                  child: CircleAvatar(
-                                    radius: 4,
-                                    backgroundColor: Color(0xFFEF4444),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(999),
+                            onTap: () {
+                              final pendingTasks = taskViewModel
+                                  .getPendingTasks();
+                              showModalBottomSheet<void>(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (sheetContext) {
+                                  return GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () =>
+                                        Navigator.of(sheetContext).pop(),
+                                    child: SafeArea(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          20,
+                                          0,
+                                          20,
+                                          16,
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.bottomCenter,
+                                          child: GestureDetector(
+                                            onTap: () {},
+                                            child: Container(
+                                              padding: const EdgeInsets.all(16),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                                boxShadow: const [
+                                                  BoxShadow(
+                                                    color: Color(0x1A000000),
+                                                    blurRadius: 20,
+                                                    offset: Offset(0, 10),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'Notifications',
+                                                        style: TextStyle(
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: const Color(
+                                                            0xFF1E293B,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                          horizontal: 10,
+                                                          vertical: 6,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
+                                                            0xFFF1F5F9,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                            999,
+                                                          ),
+                                                        ),
+                                                        child: Text(
+                                                          '${pendingTasks.length}',
+                                                          style: const TextStyle(
+                                                            color: Color(
+                                                              0xFF64748B,
+                                                            ),
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  if (pendingTasks.isEmpty)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets
+                                                              .symmetric(
+                                                        vertical: 28,
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          'No pending tasks 🎉',
+                                                          style: TextStyle(
+                                                            color: const Color(
+                                                              0xFF94A3B8,
+                                                            ),
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w600,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    )
+                                                  else
+                                                    ...pendingTasks.map((t) {
+                                                      final deadline = t.deadline;
+                                                      final timeText =
+                                                          deadline == null
+                                                              ? ''
+                                                              : '${deadline.hour.toString().padLeft(2, '0')}:${deadline.minute.toString().padLeft(2, '0')}';
+                                                      final dateText =
+                                                          deadline == null
+                                                              ? ''
+                                                              : '${deadline.year}-${deadline.month.toString().padLeft(2, '0')}-${deadline.day.toString().padLeft(2, '0')}';
+                                                      final whenText =
+                                                          deadline == null
+                                                              ? ''
+                                                              : '$dateText  •  $timeText';
+
+                                                      return Container(
+                                                        margin: const EdgeInsets
+                                                            .only(bottom: 10),
+                                                        padding:
+                                                            const EdgeInsets.all(
+                                                          12,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(
+                                                            0xFFF8FAFC,
+                                                          ),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                            16,
+                                                          ),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Container(
+                                                              width: 10,
+                                                              height: 10,
+                                                              decoration:
+                                                                  const BoxDecoration(
+                                                                color: Color(
+                                                                  0xFFEF4444,
+                                                                ),
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 10),
+                                                            Expanded(
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  Text(
+                                                                    t.title,
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          14,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w700,
+                                                                      color: const Color(
+                                                                        0xFF1E293B,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                  if (whenText
+                                                                      .isNotEmpty)
+                                                                    ...[
+                                                                      const SizedBox(
+                                                                        height: 6,
+                                                                      ),
+                                                                      Text(
+                                                                        whenText,
+                                                                        style:
+                                                                            const TextStyle(
+                                                                          fontSize:
+                                                                              12,
+                                                                          color:
+                                                                              Color(
+                                                                            0xFF94A3B8,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            const SizedBox(width: 8),
+                                                            Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .symmetric(
+                                                                horizontal: 10,
+                                                                vertical: 6,
+                                                              ),
+                                                              decoration: BoxDecoration(
+                                                                color: const Color(
+                                                                  0xFFFFF2F2,
+                                                                ),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                  999,
+                                                                ),
+                                                                border: Border.all(
+                                                                  color: const Color(
+                                                                    0xFFFFCDD2,
+                                                                  ),
+                                                                  width: 1,
+                                                                ),
+                                                              ),
+                                                              child: const Text(
+                                                                'Pending',
+                                                                style: TextStyle(
+                                                                  fontSize: 12,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w700,
+                                                                  color: Color(
+                                                                    0xFFDC2626,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    }).toList(),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0x1A000000),
+                                    blurRadius: 10,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  const Icon(
+                                    Icons.notifications_none_outlined,
+                                    size: 28,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                  Positioned(
+                                    right: 2,
+                                    top: 2,
+                                    child: taskViewModel
+                                            .getPendingTasks()
+                                            .isEmpty
+                                        ? const SizedBox.shrink()
+                                        : Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: const BoxDecoration(
+                                              color: Color(0xFFEF4444),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Text(
+                                              '${taskViewModel.getPendingTasks().length}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 7,
+                                                fontWeight: FontWeight.w800,
+                                              ),
+                                            ),
+                                          ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -194,9 +487,11 @@ class _TaskDashboardState extends State<TaskDashboard>
                           ),
                           TextButton(
                             onPressed: () {},
-                            child: const Text(
-                              'View All',
-                              style: TextStyle(color: Color(0xFF0EA5E9)),
+                            child: Text(
+                              '$totalTasks Tasks',
+                              style: const TextStyle(
+                                color: Color(0xFF0EA5E9),
+                              ),
                             ),
                           ),
                         ],
@@ -268,7 +563,9 @@ class _TaskDashboardState extends State<TaskDashboard>
               if (!mounted) return;
               await Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const NewTaskScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const NewTaskScreen(),
+                ),
               );
             },
             child: const Icon(Icons.add, size: 30, color: Colors.white),
@@ -302,8 +599,8 @@ class DailyGoalsCard extends StatelessWidget {
     final progressColor = percentage == 100
         ? const Color(0xFF22C55E)
         : percentage >= 50
-        ? const Color(0xFF0EA5E9)
-        : const Color(0xFFF59E0B);
+            ? const Color(0xFF0EA5E9)
+            : const Color(0xFFF59E0B);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -390,7 +687,8 @@ class DailyGoalsCard extends StatelessWidget {
                   tween: Tween(begin: 0, end: progress),
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
-                  builder: (context, value, child) => CircularProgressIndicator(
+                  builder: (context, value, child) =>
+                      CircularProgressIndicator(
                     value: value,
                     strokeWidth: 10,
                     backgroundColor: const Color(0xFFF1F5F9),
@@ -610,10 +908,13 @@ class _HomeBottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(context, Icons.home_filled, 'Home', true, 0),
-          _buildNavItem(context, Icons.assignment_outlined, 'Tasks', false, 1),
+          _buildNavItem(
+              context, Icons.assignment_outlined, 'Tasks', false, 1),
           _buildNavItem(context, Icons.timer_outlined, 'Focus', false, 2),
-          _buildNavItem(context, Icons.bar_chart_outlined, 'Stats', false, 3),
-          _buildNavItem(context, Icons.person_outline, 'Profile', false, 4),
+          _buildNavItem(
+              context, Icons.bar_chart_outlined, 'Stats', false, 3),
+          _buildNavItem(
+              context, Icons.person_outline, 'Profile', false, 4),
         ],
       ),
     );
@@ -638,7 +939,8 @@ class _HomeBottomNavBar extends StatelessWidget {
           case 2:
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const FocusTimerScreen()),
+              MaterialPageRoute(
+                  builder: (context) => const FocusTimerScreen()),
             );
             break;
           case 3:
@@ -667,9 +969,7 @@ class _HomeBottomNavBar extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: isActive
-                  ? const Color(0xFF0EA5E9)
-                  : const Color(0xFF94A3B8),
+              color: isActive ? const Color(0xFF0EA5E9) : const Color(0xFF94A3B8),
             ),
           ),
         ],
@@ -677,3 +977,4 @@ class _HomeBottomNavBar extends StatelessWidget {
     );
   }
 }
+

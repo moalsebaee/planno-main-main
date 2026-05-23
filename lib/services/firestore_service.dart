@@ -175,11 +175,9 @@ class FirestoreService {
     await updateTaskFields(id, {'deadline': Timestamp.fromDate(deadline)});
   }
 
-  // NOTE: This app's Task model currently has no category/description fields
-  // in Firestore writes. Keep these as no-ops to avoid accidentally
-  // overwriting unrelated fields.
   Future<void> updateTaskDescription(String id, String? description) async {
-    return;
+    final trimmed = description?.trim();
+    await updateTaskFields(id, {'description': trimmed ?? ''});
   }
 
   Future<void> updateTaskCategory(String id, String? category) async {
@@ -213,6 +211,7 @@ class FirestoreService {
       final updated = Task(
         id: id,
         title: task.title,
+        description: task.description,
         status: isCompleted ? 'completed' : 'pending',
         progress: isCompleted ? 1.0 : 0.0,
         assignedTo: task.assignedTo,

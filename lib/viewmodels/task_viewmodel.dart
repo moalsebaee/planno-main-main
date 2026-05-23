@@ -135,6 +135,9 @@ class TaskViewModel extends ChangeNotifier {
     }
   }
 
+  /// Pending tasks are tasks that are not completed.
+  List<Task> getPendingTasks() => _tasks.where((t) => !t.isCompleted).toList();
+
   List<Task> get completedTasks => _tasks.where((t) => t.isCompleted).toList();
   int get totalTasks => _tasks.length;
 

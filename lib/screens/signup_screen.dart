@@ -20,6 +20,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
   late final TextEditingController _confirmPasswordController;
   File? _selectedImage;
 
+  bool isPasswordHidden = true;
+  bool isConfirmPasswordHidden = true;
+
   @override
   void initState() {
     super.initState();
@@ -279,6 +282,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 Icons.lock_outline,
                                 viewModel,
                                 isPassword: true,
+                                obscureText: isPasswordHidden,
+                                onToggleVisibility: () {
+                                  setState(() {
+                                    isPasswordHidden = !isPasswordHidden;
+                                  });
+                                },
                               ),
                               const SizedBox(height: 20),
                               _buildLabel('Confirm Password'),
@@ -288,6 +297,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 Icons.shield_outlined,
                                 viewModel,
                                 isPassword: true,
+                                obscureText: isConfirmPasswordHidden,
+                                onToggleVisibility: () {
+                                  setState(() {
+                                    isConfirmPasswordHidden =
+                                        !isConfirmPasswordHidden;
+                                  });
+                                },
                               ),
                               const SizedBox(height: 40),
                               // Submit Button
@@ -450,6 +466,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
     IconData icon,
     SignUpViewModel viewModel, {
     bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
   }) {
     return GestureDetector(
       onTap: () {}, // To allow focus
@@ -468,7 +486,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         child: TextField(
           controller: controller,
-          obscureText: isPassword,
+          obscureText: isPassword ? obscureText : false,
           onChanged: (value) {
             // Update viewModel based on controller
             if (controller == _fullNameController) viewModel.fullName = value;
@@ -486,9 +504,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
             hintStyle: TextStyle(color: Colors.grey.shade300),
             prefixIcon: Icon(icon, color: Colors.grey.shade400),
             suffixIcon: isPassword
-                ? Icon(
-                    Icons.visibility_off_outlined,
-                    color: Colors.grey.shade400,
+                ? IconButton(
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey.shade400,
+                    ),
+                    onPressed: onToggleVisibility,
                   )
                 : null,
             border: InputBorder.none,

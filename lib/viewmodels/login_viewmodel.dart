@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -58,6 +59,28 @@ class LoginViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return true;
+    } on FirebaseAuthException catch (e) {
+      isLoading = false;
+
+      switch (e.code) {
+        case 'wrong-password':
+          errorMessage = 'Password is incorrect';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No user found with this email';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email format';
+          break;
+        case 'user-disabled':
+          errorMessage = 'This account has been disabled';
+          break;
+        default:
+          errorMessage = e.message ?? 'An error occurred. Please try again';
+      }
+
+      notifyListeners();
+      return false;
     } catch (e) {
       isLoading = false;
       errorMessage = e.toString().replaceFirst('Exception: ', '');

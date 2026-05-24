@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 160" width="100%" height="100%">
+  <rect width="100%" height="100%" fill="none"/>
+
+  <g id="planno-peeking-bot">
+    <path d="M 12 115 C 12 115, 23 118, 25 130 C 27 142, 23 160, 23 160 L 0 160 L 0 120 Z" fill="#EBF3F8" stroke="#1E3A47" stroke-width="3" stroke-linejoin="round" />
+    <circle cx="16" cy="142" r="6" fill="#0084D1" />
+
+    <line x1="48" y1="46" x2="56" y2="28" stroke="#1E3A47" stroke-width="3.5" stroke-linecap="round" />
+    <circle cx="58" cy="24" r="5" fill="#EBF3F8" stroke="#1E3A47" stroke-width="3" />
+
+    <rect x="12" y="42" width="76" height="66" rx="33" transform="rotate(12 50 75)" fill="#EBF3F8" stroke="#1E3A47" stroke-width="3.5" stroke-linejoin="round" />
+
+    <rect x="76" y="72" width="10" height="20" rx="5" transform="rotate(12 81 82)" fill="#EBF3F8" stroke="#1E3A47" stroke-width="3" />
+
+    <rect x="20" y="49" width="60" height="50" rx="22" transform="rotate(12 50 74)" fill="#FFFFFF" stroke="#1E3A47" stroke-width="2.5" />
+
+    <ellipse cx="38" cy="67" rx="4" ry="6" fill="#1E3A47" />
+    <ellipse cx="58" cy="71" rx="4" ry="6" fill="#1E3A47" />
+
+    <path d="M 42 84 Q 49 92, 56 87" fill="none" stroke="#1E3A47" stroke-width="3" stroke-linecap="round" />
+
+    <g id="chat-bubble-check" transform="translate(10, 0)">
+      <path d="M 94 65 C 94 54, 105 45, 118 45 C 131 45, 142 54, 142 65 C 142 76, 131 85, 118 85 C 113 85, 108 83, 104 80 L 92 85 L 96 75 C 94 72, 94 68, 94 65 Z" fill="#0084D1" />
+      <path d="M 110 65 L 115 70 L 127 58" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+  </g>
+</svg>

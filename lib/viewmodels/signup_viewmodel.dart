@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
 import '../../services/firestore_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -90,6 +91,7 @@ class SignUpViewModel extends ChangeNotifier {
         email,
         password,
       );
+
       if (credential?.user != null) {
         final user = credential!.user!;
         String? imageUrl;
@@ -113,6 +115,28 @@ class SignUpViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return true;
+    } on FirebaseAuthException catch (e) {
+      isLoading = false;
+
+      switch (e.code) {
+        case 'email-already-in-use':
+          errorMessage = 'This email is already in use';
+          break;
+        case 'invalid-email':
+          errorMessage = 'Invalid email format';
+          break;
+        case 'weak-password':
+          errorMessage = 'Password is too weak';
+          break;
+        case 'operation-not-allowed':
+          errorMessage = 'Email/Password is not enabled';
+          break;
+        default:
+          errorMessage = e.message ?? 'An unexpected error occurred';
+      }
+
+      notifyListeners();
+      return false;
     } catch (e) {
       isLoading = false;
       errorMessage = e.toString().replaceFirst('Exception: ', '');

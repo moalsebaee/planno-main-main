@@ -17,8 +17,8 @@ class SetFocusTimeModal extends StatefulWidget {
 }
 
 class _SetFocusTimeModalState extends State<SetFocusTimeModal> {
-  static const int _minMinutes = 10;
-  static const int _maxMinutes = 90;
+  static const int _minMinutes = 1;
+  static const int _maxMinutes = 500;
 
   final List<int> _presetMinutes = const [15, 25, 45, 60, 90];
 
@@ -31,7 +31,7 @@ class _SetFocusTimeModalState extends State<SetFocusTimeModal> {
   void initState() {
     super.initState();
     _selectedMinutes = widget.initialMinutes;
-    _minutesController = TextEditingController(text: '${_selectedMinutes} min');
+    _minutesController = TextEditingController(text: '$_selectedMinutes');
     _focusNode = FocusNode();
 
     // Ensure cursor is visible (TextField is always present).
@@ -64,23 +64,29 @@ class _SetFocusTimeModalState extends State<SetFocusTimeModal> {
   Color get _accentTint => _accent.withOpacity(0.75);
 
   void _setMinutes(int minutes, {bool fromText = false}) {
-    final clamped = minutes.clamp(_minMinutes, _maxMinutes);
-
     if (_isTextEditing && !fromText) {
       // If user is typing, don't fight their input.
       return;
     }
 
     setState(() {
-      _selectedMinutes = clamped;
-      _minutesController.text = '${_selectedMinutes} min';
+      _selectedMinutes = minutes;
+      _minutesController.text = '$_selectedMinutes';
+
+      _minutesController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _minutesController.text.length),
+      );
     });
   }
 
   int _parseMinutesFromText(String raw) {
     final digits = raw.replaceAll(RegExp(r'[^0-9]'), '');
     final value = int.tryParse(digits);
-    if (value == null) return _selectedMinutes;
+
+    if (value == null || value <= 0) {
+      return 1;
+    }
+
     return value;
   }
 
@@ -268,27 +274,19 @@ class _SetFocusTimeModalState extends State<SetFocusTimeModal> {
                                       width: 1.5,
                                     ),
                                   ),
-                                  suffixText: '',
+                                  suffixText: 'min',
                                 ),
                                 onTap: () {
                                   _isTextEditing = true;
-                                  // Select digits part quickly.
-                                  final text = _minutesController.text;
-                                  final match = RegExp(r'\d+').firstMatch(text);
-                                  if (match != null) {
-                                    final start = match.start;
-                                    final end = match.end;
-                                    _minutesController.selection =
-                                        TextSelection(
-                                          baseOffset: start,
-                                          extentOffset: end,
-                                        );
-                                  }
                                 },
                                 onChanged: (val) {
                                   _isTextEditing = true;
+
                                   final parsed = _parseMinutesFromText(val);
-                                  _setMinutes(parsed, fromText: true);
+
+                                  setState(() {
+                                    _selectedMinutes = parsed;
+                                  });
                                 },
                                 onEditingComplete: () {
                                   _isTextEditing = false;
@@ -348,7 +346,9 @@ class _SetFocusTimeModalState extends State<SetFocusTimeModal> {
                                 child: Slider(
                                   min: _minMinutes.toDouble(),
                                   max: _maxMinutes.toDouble(),
-                                  value: _selectedMinutes.toDouble(),
+                                  value: _selectedMinutes
+                                      .clamp(_minMinutes, _maxMinutes)
+                                      .toDouble(),
                                   divisions: (_maxMinutes - _minMinutes),
                                   label: '$_selectedMinutes min',
                                   onChanged: (v) {

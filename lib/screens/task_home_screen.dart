@@ -8,6 +8,7 @@ import 'focus_timer_screen.dart';
 import 'stats_screen.dart';
 import 'profile_screen.dart';
 import 'tasks_screen.dart';
+import '../widgets/floating_boot_decoration.dart';
 
 class TaskHomeScreen extends StatelessWidget {
   const TaskHomeScreen({super.key});
@@ -27,6 +28,8 @@ class TaskDashboard extends StatefulWidget {
 
 class _TaskDashboardState extends State<TaskDashboard>
     with SingleTickerProviderStateMixin {
+  bool _chatbotDockExpanded = false;
+
   late AnimationController _progressAnimationController;
   late Animation<double> _progressAnimation;
   double _currentProgress = 0.0;
@@ -74,7 +77,8 @@ class _TaskDashboardState extends State<TaskDashboard>
     final percentage = (progress * 100).round();
     if (percentage == 100) return 'All tasks completed! \u{1F389}';
     if (percentage >= 81) return 'Amazing work! Finish strong \u{1F4AF}';
-    if (percentage >= 51) return "Great job! You're more than halfway \u{1F525}";
+    if (percentage >= 51)
+      return "Great job! You're more than halfway \u{1F525}";
     if (percentage >= 21) return 'Good progress, keep going \u{1F680}';
     return "Let's get started \u{1F4AA}";
   }
@@ -109,453 +113,488 @@ class _TaskDashboardState extends State<TaskDashboard>
 
         return Scaffold(
           backgroundColor: const Color(0xFFF0F4F7),
-          body: SafeArea(
-            child: AnimatedBuilder(
-              animation: _progressAnimation,
-              builder: (context, child) {
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          body: Stack(
+            fit: StackFit.expand,
+            clipBehavior: Clip.none,
+            children: [
+              const FloatingBootDecoration(opacity: 0.4),
+              const SizedBox.shrink(),
+
+              SafeArea(
+                child: AnimatedBuilder(
+                  animation: _progressAnimation,
+                  builder: (context, child) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'Tue, Oct 24',
-                                style: const TextStyle(
-                                  color: Color(0xFF64748B),
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Consumer<ProfileViewModel>(
-                                builder: (context, profileViewModel, child) {
-                                  final rawName =
-                                      profileViewModel.user?.name?.trim();
-                                  final safeName =
-                                      (rawName == null || rawName.isEmpty)
-                                          ? 'User'
-                                          : rawName;
-                                  final greeting = getGreetingByTime();
-                                  return Text(
-                                    '$greeting,\n$safeName',
-                                    style: const TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.2,
-                                      color: Color(0xFF1E293B),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Tue, Oct 24',
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 14,
                                     ),
-                                  );
-                                },
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Consumer<ProfileViewModel>(
+                                    builder:
+                                        (context, profileViewModel, child) {
+                                          final rawName = profileViewModel
+                                              .user
+                                              ?.name
+                                              ?.trim();
+                                          final safeName =
+                                              (rawName == null ||
+                                                  rawName.isEmpty)
+                                              ? 'User'
+                                              : rawName;
+                                          final greeting = getGreetingByTime();
+                                          return Text(
+                                            '$greeting,\n$safeName',
+                                            style: const TextStyle(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.2,
+                                              color: Color(0xFF1E293B),
+                                            ),
+                                          );
+                                        },
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          InkWell(
-                            borderRadius: BorderRadius.circular(999),
-                            onTap: () {
-                              final pendingTasks = taskViewModel
-                                  .getPendingTasks();
-                              showModalBottomSheet<void>(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                builder: (sheetContext) {
-                                  return GestureDetector(
-                                    behavior: HitTestBehavior.opaque,
-                                    onTap: () =>
-                                        Navigator.of(sheetContext).pop(),
-                                    child: SafeArea(
-                                      child: Padding(
-                                        padding: const EdgeInsets.fromLTRB(
-                                          20,
-                                          0,
-                                          20,
-                                          16,
-                                        ),
-                                        child: Align(
-                                          alignment: Alignment.bottomCenter,
-                                          child: GestureDetector(
-                                            onTap: () {},
-                                            child: Container(
-                                              padding: const EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                                boxShadow: const [
-                                                  BoxShadow(
-                                                    color: Color(0x1A000000),
-                                                    blurRadius: 20,
-                                                    offset: Offset(0, 10),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(999),
+                                onTap: () {
+                                  final pendingTasks = taskViewModel
+                                      .getPendingTasks();
+                                  showModalBottomSheet<void>(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (sheetContext) {
+                                      return GestureDetector(
+                                        behavior: HitTestBehavior.opaque,
+                                        onTap: () =>
+                                            Navigator.of(sheetContext).pop(),
+                                        child: SafeArea(
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              20,
+                                              0,
+                                              20,
+                                              16,
+                                            ),
+                                            child: Align(
+                                              alignment: Alignment.bottomCenter,
+                                              child: GestureDetector(
+                                                onTap: () {},
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(
+                                                    16,
                                                   ),
-                                                ],
-                                              ),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'Notifications',
-                                                        style: TextStyle(
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: const Color(
-                                                            0xFF1E293B,
-                                                          ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          20,
                                                         ),
-                                                      ),
-                                                      Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                          horizontal: 10,
-                                                          vertical: 6,
+                                                    boxShadow: const [
+                                                      BoxShadow(
+                                                        color: Color(
+                                                          0x1A000000,
                                                         ),
-                                                        decoration: BoxDecoration(
-                                                          color: const Color(
-                                                            0xFFF1F5F9,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                            999,
-                                                          ),
-                                                        ),
-                                                        child: Text(
-                                                          '${pendingTasks.length}',
-                                                          style: const TextStyle(
-                                                            color: Color(
-                                                              0xFF64748B,
-                                                            ),
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600,
-                                                          ),
-                                                        ),
+                                                        blurRadius: 20,
+                                                        offset: Offset(0, 10),
                                                       ),
                                                     ],
                                                   ),
-                                                  const SizedBox(height: 12),
-                                                  if (pendingTasks.isEmpty)
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets
-                                                              .symmetric(
-                                                        vertical: 28,
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          'No pending tasks 🎉',
-                                                          style: TextStyle(
-                                                            color: const Color(
-                                                              0xFF94A3B8,
+                                                  child: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Row(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
+                                                        children: [
+                                                          const Text(
+                                                            'Notifications',
+                                                            style: TextStyle(
+                                                              fontSize: 18,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: Color(
+                                                                0xFF1E293B,
+                                                              ),
                                                             ),
-                                                            fontSize: 16,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w600,
                                                           ),
-                                                        ),
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal:
+                                                                      10,
+                                                                  vertical: 6,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFFF1F5F9,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    999,
+                                                                  ),
+                                                            ),
+                                                            child: Text(
+                                                              '${pendingTasks.length}',
+                                                              style: const TextStyle(
+                                                                color: Color(
+                                                                  0xFF64748B,
+                                                                ),
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
-                                                    )
-                                                  else
-                                                    ...pendingTasks.map((t) {
-                                                      final deadline = t.deadline;
-                                                      final timeText =
-                                                          deadline == null
+                                                      const SizedBox(
+                                                        height: 12,
+                                                      ),
+                                                      if (pendingTasks.isEmpty)
+                                                        const Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                vertical: 28,
+                                                              ),
+                                                          child: Center(
+                                                            child: Text(
+                                                              'No pending tasks 🎉',
+                                                              style: TextStyle(
+                                                                color: Color(
+                                                                  0xFF94A3B8,
+                                                                ),
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        )
+                                                      else
+                                                        ...pendingTasks.map((
+                                                          t,
+                                                        ) {
+                                                          final deadline =
+                                                              t.deadline;
+                                                          final timeText =
+                                                              deadline == null
                                                               ? ''
                                                               : '${deadline.hour.toString().padLeft(2, '0')}:${deadline.minute.toString().padLeft(2, '0')}';
-                                                      final dateText =
-                                                          deadline == null
+                                                          final dateText =
+                                                              deadline == null
                                                               ? ''
                                                               : '${deadline.year}-${deadline.month.toString().padLeft(2, '0')}-${deadline.day.toString().padLeft(2, '0')}';
-                                                      final whenText =
-                                                          deadline == null
+                                                          final whenText =
+                                                              deadline == null
                                                               ? ''
                                                               : '$dateText  •  $timeText';
 
-                                                      return Container(
-                                                        margin: const EdgeInsets
-                                                            .only(bottom: 10),
-                                                        padding:
-                                                            const EdgeInsets.all(
-                                                          12,
-                                                        ),
-                                                        decoration: BoxDecoration(
-                                                          color: const Color(
-                                                            0xFFF8FAFC,
-                                                          ),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                            16,
-                                                          ),
-                                                        ),
-                                                        child: Row(
-                                                          children: [
-                                                            Container(
-                                                              width: 10,
-                                                              height: 10,
-                                                              decoration:
-                                                                  const BoxDecoration(
-                                                                color: Color(
-                                                                  0xFFEF4444,
+                                                          return Container(
+                                                            margin:
+                                                                const EdgeInsets.only(
+                                                                  bottom: 10,
                                                                 ),
-                                                                shape: BoxShape
-                                                                    .circle,
-                                                              ),
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  12,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFFF8FAFC,
+                                                                  ),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    16,
+                                                                  ),
                                                             ),
-                                                            const SizedBox(width: 10),
-                                                            Expanded(
-                                                              child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  Text(
-                                                                    t.title,
-                                                                    style:
-                                                                        TextStyle(
-                                                                      fontSize:
-                                                                          14,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w700,
-                                                                      color: const Color(
-                                                                        0xFF1E293B,
+                                                            child: Row(
+                                                              children: [
+                                                                const SizedBox(
+                                                                  width: 10,
+                                                                  height: 10,
+                                                                  child: DecoratedBox(
+                                                                    decoration: BoxDecoration(
+                                                                      color: Color(
+                                                                        0xFFEF4444,
                                                                       ),
+                                                                      shape: BoxShape
+                                                                          .circle,
                                                                     ),
                                                                   ),
-                                                                  if (whenText
-                                                                      .isNotEmpty)
-                                                                    ...[
-                                                                      const SizedBox(
-                                                                        height: 6,
-                                                                      ),
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 10,
+                                                                ),
+                                                                Expanded(
+                                                                  child: Column(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
                                                                       Text(
-                                                                        whenText,
-                                                                        style:
-                                                                            const TextStyle(
+                                                                        t.title,
+                                                                        style: const TextStyle(
                                                                           fontSize:
-                                                                              12,
-                                                                          color:
-                                                                              Color(
-                                                                            0xFF94A3B8,
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w700,
+                                                                          color: Color(
+                                                                            0xFF1E293B,
                                                                           ),
                                                                         ),
                                                                       ),
+                                                                      if (whenText
+                                                                          .isNotEmpty) ...[
+                                                                        const SizedBox(
+                                                                          height:
+                                                                              6,
+                                                                        ),
+                                                                        Text(
+                                                                          whenText,
+                                                                          style: const TextStyle(
+                                                                            fontSize:
+                                                                                12,
+                                                                            color: Color(
+                                                                              0xFF94A3B8,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      ],
                                                                     ],
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            const SizedBox(width: 8),
-                                                            Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .symmetric(
-                                                                horizontal: 10,
-                                                                vertical: 6,
-                                                              ),
-                                                              decoration: BoxDecoration(
-                                                                color: const Color(
-                                                                  0xFFFFF2F2,
-                                                                ),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                  999,
-                                                                ),
-                                                                border: Border.all(
-                                                                  color: const Color(
-                                                                    0xFFFFCDD2,
-                                                                  ),
-                                                                  width: 1,
-                                                                ),
-                                                              ),
-                                                              child: const Text(
-                                                                'Pending',
-                                                                style: TextStyle(
-                                                                  fontSize: 12,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w700,
-                                                                  color: Color(
-                                                                    0xFFDC2626,
                                                                   ),
                                                                 ),
-                                                              ),
+                                                                const SizedBox(
+                                                                  width: 8,
+                                                                ),
+                                                                Container(
+                                                                  padding:
+                                                                      const EdgeInsets.symmetric(
+                                                                        horizontal:
+                                                                            10,
+                                                                        vertical:
+                                                                            6,
+                                                                      ),
+                                                                  decoration: BoxDecoration(
+                                                                    color: const Color(
+                                                                      0xFFFFF2F2,
+                                                                    ),
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                          999,
+                                                                        ),
+                                                                    border: Border.all(
+                                                                      color: const Color(
+                                                                        0xFFFFCDD2,
+                                                                      ),
+                                                                      width: 1,
+                                                                    ),
+                                                                  ),
+                                                                  child: const Text(
+                                                                    'Pending',
+                                                                    style: TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w700,
+                                                                      color: Color(
+                                                                        0xFFDC2626,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    }).toList(),
-                                                ],
+                                                          );
+                                                        }).toList(),
+                                                    ],
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Color(0x1A000000),
+                                        blurRadius: 10,
                                       ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      const Icon(
+                                        Icons.notifications_none_outlined,
+                                        size: 28,
+                                        color: Color(0xFF64748B),
+                                      ),
+                                      Positioned(
+                                        right: 2,
+                                        top: 2,
+                                        child:
+                                            taskViewModel
+                                                .getPendingTasks()
+                                                .isEmpty
+                                            ? const SizedBox.shrink()
+                                            : Container(
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                decoration: const BoxDecoration(
+                                                  color: Color(0xFFEF4444),
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Text(
+                                                  '${taskViewModel.getPendingTasks().length}',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 7,
+                                                    fontWeight: FontWeight.w800,
+                                                  ),
+                                                ),
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 30),
+                          DailyGoalsCard(
+                            progress: _progressAnimation.value,
+                            completedTasks: completedTasks,
+                            totalTasks: totalTasks,
+                            motivationalMessage: _getMotivationalMessage(
+                              _progressAnimation.value,
+                            ),
+                            secondaryMessage: _getSecondaryMessage(
+                              _progressAnimation.value,
+                            ),
+                          ),
+                          const SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Today's Tasks",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1E293B),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  '$totalTasks Tasks',
+                                  style: const TextStyle(
+                                    color: Color(0xFF0EA5E9),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          if (tasks.isEmpty)
+                            Container(
+                              padding: const EdgeInsets.all(32),
+                              child: const Center(
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.task_alt,
+                                      size: 64,
+                                      color: Color(0xFFCBD5E1),
+                                    ),
+                                    SizedBox(height: 16),
+                                    Text(
+                                      'No tasks for today',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'Tap + to add a new task',
+                                      style: TextStyle(
+                                        color: Color(0xFF94A3B8),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            ...tasks.asMap().entries.map(
+                              (entry) => TaskCard(
+                                title: entry.value.title,
+                                time: entry.value.time,
+                                category: entry.value.category,
+                                hasIndicator: entry.value.hasIndicator,
+                                categoryIcon:
+                                    entry.value.categoryIcon ?? Icons.task_alt,
+                                createdDate: entry.value.createdDate,
+                                isCompleted: entry.value.isCompleted,
+                                onToggle: () =>
+                                    _toggleTaskCompletion(entry.value.id),
+                                onTap: () async {
+                                  if (!mounted) return;
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          NewTaskScreen(task: entry.value),
                                     ),
                                   );
                                 },
-                              );
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Color(0x1A000000),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Stack(
-                                children: [
-                                  const Icon(
-                                    Icons.notifications_none_outlined,
-                                    size: 28,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                  Positioned(
-                                    right: 2,
-                                    top: 2,
-                                    child: taskViewModel
-                                            .getPendingTasks()
-                                            .isEmpty
-                                        ? const SizedBox.shrink()
-                                        : Container(
-                                            padding: const EdgeInsets.all(2),
-                                            decoration: const BoxDecoration(
-                                              color: Color(0xFFEF4444),
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: Text(
-                                              '${taskViewModel.getPendingTasks().length}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 7,
-                                                fontWeight: FontWeight.w800,
-                                              ),
-                                            ),
-                                          ),
-                                  ),
-                                ],
                               ),
                             ),
-                          ),
+                          const SizedBox(height: 100),
                         ],
                       ),
-                      const SizedBox(height: 30),
-                      DailyGoalsCard(
-                        progress: _progressAnimation.value,
-                        completedTasks: completedTasks,
-                        totalTasks: totalTasks,
-                        motivationalMessage: _getMotivationalMessage(
-                          _progressAnimation.value,
-                        ),
-                        secondaryMessage: _getSecondaryMessage(
-                          _progressAnimation.value,
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "Today's Tasks",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1E293B),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {},
-                            child: Text(
-                              '$totalTasks Tasks',
-                              style: const TextStyle(
-                                color: Color(0xFF0EA5E9),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      if (tasks.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          child: const Center(
-                            child: Column(
-                              children: [
-                                Icon(
-                                  Icons.task_alt,
-                                  size: 64,
-                                  color: Color(0xFFCBD5E1),
-                                ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No tasks for today',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Color(0xFF94A3B8),
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Tap + to add a new task',
-                                  style: TextStyle(color: Color(0xFF94A3B8)),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      else
-                        ...tasks.asMap().entries.map(
-                          (entry) => TaskCard(
-                            title: entry.value.title,
-                            time: entry.value.time,
-                            category: entry.value.category,
-                            hasIndicator: entry.value.hasIndicator,
-                            categoryIcon:
-                                entry.value.categoryIcon ?? Icons.task_alt,
-                            createdDate: entry.value.createdDate,
-                            isCompleted: entry.value.isCompleted,
-                            onToggle: () =>
-                                _toggleTaskCompletion(entry.value.id),
-                            onTap: () async {
-                              if (!mounted) return;
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      NewTaskScreen(task: entry.value),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
           floatingActionButton: FloatingActionButton(
             backgroundColor: const Color(0xFF475569),
@@ -563,13 +602,12 @@ class _TaskDashboardState extends State<TaskDashboard>
               if (!mounted) return;
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const NewTaskScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const NewTaskScreen()),
               );
             },
             child: const Icon(Icons.add, size: 30, color: Colors.white),
           ),
+
           bottomNavigationBar: _HomeBottomNavBar(),
         );
       },
@@ -599,8 +637,8 @@ class DailyGoalsCard extends StatelessWidget {
     final progressColor = percentage == 100
         ? const Color(0xFF22C55E)
         : percentage >= 50
-            ? const Color(0xFF0EA5E9)
-            : const Color(0xFFF59E0B);
+        ? const Color(0xFF0EA5E9)
+        : const Color(0xFFF59E0B);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -687,8 +725,7 @@ class DailyGoalsCard extends StatelessWidget {
                   tween: Tween(begin: 0, end: progress),
                   duration: const Duration(milliseconds: 500),
                   curve: Curves.easeInOut,
-                  builder: (context, value, child) =>
-                      CircularProgressIndicator(
+                  builder: (context, value, child) => CircularProgressIndicator(
                     value: value,
                     strokeWidth: 10,
                     backgroundColor: const Color(0xFFF1F5F9),
@@ -700,7 +737,7 @@ class DailyGoalsCard extends StatelessWidget {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: Text(
-                  '$percentage%',
+                  '${percentage}%',
                   key: ValueKey(percentage),
                   style: const TextStyle(
                     fontSize: 22,
@@ -908,13 +945,10 @@ class _HomeBottomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(context, Icons.home_filled, 'Home', true, 0),
-          _buildNavItem(
-              context, Icons.assignment_outlined, 'Tasks', false, 1),
+          _buildNavItem(context, Icons.assignment_outlined, 'Tasks', false, 1),
           _buildNavItem(context, Icons.timer_outlined, 'Focus', false, 2),
-          _buildNavItem(
-              context, Icons.bar_chart_outlined, 'Stats', false, 3),
-          _buildNavItem(
-              context, Icons.person_outline, 'Profile', false, 4),
+          _buildNavItem(context, Icons.bar_chart_outlined, 'Stats', false, 3),
+          _buildNavItem(context, Icons.person_outline, 'Profile', false, 4),
         ],
       ),
     );
@@ -939,8 +973,7 @@ class _HomeBottomNavBar extends StatelessWidget {
           case 2:
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                  builder: (context) => const FocusTimerScreen()),
+              MaterialPageRoute(builder: (context) => const FocusTimerScreen()),
             );
             break;
           case 3:
@@ -969,7 +1002,9 @@ class _HomeBottomNavBar extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 10,
-              color: isActive ? const Color(0xFF0EA5E9) : const Color(0xFF94A3B8),
+              color: isActive
+                  ? const Color(0xFF0EA5E9)
+                  : const Color(0xFF94A3B8),
             ),
           ),
         ],
@@ -977,4 +1012,3 @@ class _HomeBottomNavBar extends StatelessWidget {
     );
   }
 }
-
